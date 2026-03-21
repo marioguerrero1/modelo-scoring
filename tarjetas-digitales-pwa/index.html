@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#FFFFFF">
+<title>Mis Tarjetas Digitales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-background-primary: #FFFFFF;
+    --color-background-secondary: #F5F5F7;
+    --color-text-primary: #1D1D1F;
+    --color-text-secondary: #6E6E73;
+    --color-text-tertiary: #AEAEB2;
+    --color-border-secondary: #E5E5EA;
+    --color-border-tertiary: #F2F2F7;
+    --border-radius-lg: 16px;
+    --border-radius-md: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: var(--color-background-primary);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .app-shell {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .safe-top {
+    height: env(safe-area-inset-top, 20px);
+    flex-shrink: 0;
+  }
+
+  .screen-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screen-area::-webkit-scrollbar { display: none; }
+
+  .safe-bottom {
+    height: env(safe-area-inset-bottom, 8px);
+    flex-shrink: 0;
+  }
+
+  /* Card carousel */
+  #card-carousel {
+    position: relative;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  #cards-track {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform;
+  }
+
+  .card-slide {
+    min-width: 100%;
+    width: 100%;
+    padding: 0;
+  }
+
+  /* CTA button */
+  #cta-btn {
+    transition: transform 0.15s, filter 0.15s;
+  }
+  #cta-btn:active {
+    transform: scale(0.97);
+    filter: brightness(0.9);
+  }
+
+  /* Nav back */
+  .nav-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+  .nav-header:active { opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div class="safe-top"></div>
+
+  <div class="screen-area">
+    <div style="padding: 0 20px 24px;">
+
+      <div class="nav-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-primary)" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+        <span style="font-weight:500;font-size:16px;color:var(--color-text-primary);">Mis tarjetas</span>
+      </div>
+
+      <div id="card-carousel">
+        <div id="cards-track"></div>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:6px;margin-bottom:20px;" id="card-dots"></div>
+
+      <div id="card-name-display" style="text-align:center;margin-bottom:20px;">
+        <div id="card-title" style="font-size:16px;font-weight:500;color:var(--color-text-primary);"></div>
+        <div id="card-subtitle" style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;"></div>
+      </div>
+
+      <div style="font-weight:500;font-size:14px;color:var(--color-text-primary);margin-bottom:12px;">Beneficios</div>
+      <div id="benefits-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;"></div>
+
+      <div id="cta-btn" style="border-radius:var(--border-radius-lg);padding:14px;text-align:center;font-weight:500;font-size:15px;color:#fff;cursor:pointer;"></div>
+
+    </div>
+  </div>
+
+  <div class="safe-bottom"></div>
+</div>
+
+<script>
+var cards = [
+  {
+    id: 'viajes',
+    title: 'Viajes',
+    subtitle: 'Tu compañera de aventura',
+    gradient: 'linear-gradient(135deg, #0F6E56 0%, #1D9E75 40%, #5DCAA5 100%)',
+    accent: '#1D9E75',
+    accentDark: '#085041',
+    accentLight: '#E1F5EE',
+    icon: 'M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z',
+    chip: '#9FE1CB',
+    number: '4921 •••• •••• 7182',
+    benefits: [
+      { icon: 'M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z', label: 'Aerolíneas', desc: '5% cashback en vuelos', tag: '5% CB' },
+      { icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z', label: 'Hoteles', desc: '3 MSI en reservaciones', tag: '3 MSI' },
+      { icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', label: 'Transporte', desc: '3% cashback en Uber y taxis', tag: '3% CB' },
+      { icon: 'M20 21v-2a4 4 0 00-3-3.87M9 11a4 4 0 100-8 4 4 0 000 8z', label: 'Seguro de viajero', desc: 'Cobertura incluida gratis', tag: 'Gratis' }
+    ]
+  },
+  {
+    id: 'gamer',
+    title: 'Gamer',
+    subtitle: 'Sube de nivel con cada compra',
+    gradient: 'linear-gradient(135deg, #26215C 0%, #534AB7 40%, #AFA9EC 100%)',
+    accent: '#534AB7',
+    accentDark: '#26215C',
+    accentLight: '#EEEDFE',
+    icon: 'M6 12h4m4 0h4M14 8v8',
+    chip: '#CECBF6',
+    number: '4921 •••• •••• 3364',
+    benefits: [
+      { icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', label: 'Suscripciones', desc: '10% cashback en Game Pass, PS+', tag: '10% CB' },
+      { icon: 'M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18', label: 'Marketplace', desc: '6 MSI en Steam y consolas', tag: '6 MSI' },
+      { icon: 'M20 21v-2a4 4 0 00-3-3.87M9 11a4 4 0 100-8 4 4 0 000 8z', label: 'Hardware', desc: '5% cashback en periféricos', tag: '5% CB' },
+      { icon: 'M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z', label: 'Eventos gaming', desc: 'Acceso early-bird y descuentos', tag: '15% OFF' }
+    ]
+  },
+  {
+    id: 'salud',
+    title: 'Salud',
+    subtitle: 'Cuida lo que más importa',
+    gradient: 'linear-gradient(135deg, #993556 0%, #D4537E 40%, #F4C0D1 100%)',
+    accent: '#D4537E',
+    accentDark: '#4B1528',
+    accentLight: '#FBEAF0',
+    icon: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z',
+    chip: '#ED93B1',
+    number: '4921 •••• •••• 5510',
+    benefits: [
+      { icon: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z', label: 'Farmacias', desc: '8% cashback en medicamentos', tag: '8% CB' },
+      { icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z', label: 'Consultas médicas', desc: '6 MSI en doctores y labs', tag: '6 MSI' },
+      { icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', label: 'Bienestar', desc: '5% en gimnasios y apps fitness', tag: '5% CB' },
+      { icon: 'M20 21v-2a4 4 0 00-3-3.87M9 11a4 4 0 100-8 4 4 0 000 8z', label: 'Seguro médico', desc: 'Telemedicina incluida gratis', tag: 'Gratis' }
+    ]
+  },
+  {
+    id: 'deportes',
+    title: 'Deportista',
+    subtitle: 'Entrena, compite, ahorra',
+    gradient: 'linear-gradient(135deg, #854F0B 0%, #EF9F27 40%, #FAC775 100%)',
+    accent: '#BA7517',
+    accentDark: '#412402',
+    accentLight: '#FAEEDA',
+    icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+    chip: '#FAC775',
+    number: '4921 •••• •••• 8847',
+    benefits: [
+      { icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z', label: 'Tiendas deportivas', desc: '7% cashback en Nike, Adidas', tag: '7% CB' },
+      { icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z', label: 'Gimnasios', desc: '3 MSI en membresías', tag: '3 MSI' },
+      { icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', label: 'Nutrición', desc: '5% en suplementos y tiendas fit', tag: '5% CB' },
+      { icon: 'M20 21v-2a4 4 0 00-3-3.87M9 11a4 4 0 100-8 4 4 0 000 8z', label: 'Eventos y carreras', desc: 'Inscripciones con 20% OFF', tag: '20% OFF' }
+    ]
+  }
+];
+
+var current = 0;
+var track = document.getElementById('cards-track');
+var dots = document.getElementById('card-dots');
+var titleEl = document.getElementById('card-title');
+var subtitleEl = document.getElementById('card-subtitle');
+var benefitsList = document.getElementById('benefits-list');
+var ctaBtn = document.getElementById('cta-btn');
+
+function buildCards() {
+  track.innerHTML = cards.map(function(c) {
+    return '<div class="card-slide">' +
+      '<div style="width:100%;aspect-ratio:1.6;border-radius:16px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:' + c.gradient + ';position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;top:-30px;right:-20px;opacity:0.12;">' +
+        '<svg width="120" height="120" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="' + c.icon + '"/></svg>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+        '<div>' +
+          '<div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:2px;">TARJETA</div>' +
+          '<div style="font-size:18px;font-weight:500;color:#fff;">' + c.title + '</div>' +
+        '</div>' +
+        '<div style="width:32px;height:24px;border-radius:4px;background:' + c.chip + ';opacity:0.8;"></div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="font-size:14px;color:rgba(255,255,255,0.9);letter-spacing:2px;margin-bottom:8px;">' + c.number + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<div style="font-size:11px;color:rgba(255,255,255,0.6);">VÁLIDA HASTA 12/28</div>' +
+          '<svg width="32" height="20" viewBox="0 0 32 20"><circle cx="11" cy="10" r="9" fill="rgba(255,255,255,0.5)"/><circle cx="21" cy="10" r="9" fill="rgba(255,255,255,0.3)"/></svg>' +
+        '</div>' +
+      '</div>' +
+    '</div></div>';
+  }).join('');
+}
+
+function renderDots() {
+  dots.innerHTML = cards.map(function(c, i) {
+    return '<div style="width:' + (i === current ? '20px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === current ? cards[current].accent : 'var(--color-border-secondary)') + ';transition:all 0.3s;cursor:pointer;" data-i="' + i + '"></div>';
+  }).join('');
+  dots.querySelectorAll('[data-i]').forEach(function(el) {
+    el.onclick = function() { current = parseInt(el.dataset.i); render(); };
+  });
+}
+
+function renderBenefits() {
+  var c = cards[current];
+  benefitsList.innerHTML = c.benefits.map(function(b) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--border-radius-lg);background:var(--color-background-secondary);">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:' + c.accentLight + ';display:flex;align-items:center;justify-content:center;">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + c.accent + '" stroke-width="2"><path d="' + b.icon + '"/></svg>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:500;color:var(--color-text-primary);">' + b.label + '</div>' +
+          '<div style="font-size:11px;color:var(--color-text-tertiary);">' + b.desc + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:' + c.accentLight + ';color:' + c.accentDark + ';font-size:11px;font-weight:500;padding:3px 10px;border-radius:10px;white-space:nowrap;">' + b.tag + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function render() {
+  var c = cards[current];
+  track.style.transform = 'translateX(-' + (current * 100) + '%)';
+  titleEl.textContent = 'Tarjeta ' + c.title;
+  titleEl.style.color = c.accent;
+  subtitleEl.textContent = c.subtitle;
+  ctaBtn.style.background = c.accent;
+  ctaBtn.textContent = 'Activar tarjeta ' + c.title;
+  renderDots();
+  renderBenefits();
+}
+
+buildCards();
+
+var startX = 0;
+var isDragging = false;
+var carousel = document.getElementById('card-carousel');
+
+carousel.addEventListener('touchstart', function(e) {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+}, { passive: true });
+carousel.addEventListener('touchend', function(e) {
+  if (!isDragging) return;
+  isDragging = false;
+  var diff = startX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 40) {
+    if (diff > 0 && current < cards.length - 1) current++;
+    else if (diff < 0 && current > 0) current--;
+    render();
+  }
+});
+carousel.addEventListener('mousedown', function(e) {
+  startX = e.clientX;
+  isDragging = true;
+  e.preventDefault();
+});
+carousel.addEventListener('mouseup', function(e) {
+  if (!isDragging) return;
+  isDragging = false;
+  var diff = startX - e.clientX;
+  if (Math.abs(diff) > 40) {
+    if (diff > 0 && current < cards.length - 1) current++;
+    else if (diff < 0 && current > 0) current--;
+    render();
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' && current < cards.length - 1) { current++; render(); }
+  if (e.key === 'ArrowLeft' && current > 0) { current--; render(); }
+});
+
+render();
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function() {});
+}
+</script>
+</body>
+</html>
