@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#FF5733">
+<title>Vax Flow – Prototipo Interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --coral: #FF5733;
+    --coral-light: #FAECE7;
+    --coral-dark: #D94425;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --warn: #BA7517;
+    --red: #E24B4A;
+    --bg: #FFFFFF;
+    --bg-secondary: #F5F5F7;
+    --text-primary: #1D1D1F;
+    --text-secondary: #6E6E73;
+    --text-tertiary: #AEAEB2;
+    --border: #E5E5EA;
+    --border-light: #F2F2F7;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* iPhone frame hidden in PWA — runs natively */
+  .iphone-frame {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg);
+    border-radius: 0;
+    padding: 0;
+    position: relative;
+    box-shadow: none;
+  }
+
+  .iphone-screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Dynamic Island hidden — real phone has its own */
+  .dynamic-island { display: none; }
+
+  /* Status Bar — use safe area on real devices */
+  .status-bar {
+    height: calc(env(safe-area-inset-top, 20px) + 36px);
+    padding-top: env(safe-area-inset-top, 20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    position: relative;
+    z-index: 50;
+  }
+
+  .status-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Screen Content Area */
+  .screen-area {
+    height: calc(100% - 59px - 34px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .screen-area::-webkit-scrollbar { display: none; }
+
+  .screen-content {
+    padding: 0 20px 20px;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .screen-content.active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .screen-content.exit-left {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  /* Home Indicator */
+  .home-indicator {
+    height: calc(env(safe-area-inset-bottom, 8px) + 26px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+  }
+
+  .home-indicator-bar {
+    width: 134px;
+    height: 5px;
+    background: var(--text-primary);
+    border-radius: 3px;
+    opacity: 0.2;
+  }
+
+  /* Navigation Header */
+  .nav-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    cursor: pointer;
+  }
+
+  .nav-header:active { opacity: 0.6; }
+
+  .nav-header svg { transition: transform 0.2s; }
+  .nav-header:active svg { transform: translateX(-3px); }
+
+  .nav-title {
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  /* Quick Action Buttons */
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .quick-action {
+    flex: 1;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-family: var(--font);
+  }
+
+  .quick-action:active {
+    transform: scale(0.95);
+    background: #EDEDF0;
+  }
+
+  .quick-action svg {
+    display: block;
+    margin: 0 auto 4px;
+  }
+
+  /* Transaction Row */
+  .tx-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--border-light);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tx-row:active { opacity: 0.7; }
+
+  .tx-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tx-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tx-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .tx-date {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 1px;
+  }
+
+  .tx-amount {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .tx-amount.negative { color: var(--red); }
+  .tx-amount.positive { color: var(--green); }
+
+  /* Highlighted transaction */
+  .tx-row.highlighted {
+    background: var(--coral-light);
+    border-radius: var(--radius-md);
+    padding: 12px 8px;
+    margin: 0 -8px;
+    border-bottom: none;
+    position: relative;
+  }
+
+  .tx-row.highlighted .tx-icon {
+    background: var(--bg);
+  }
+
+  .tx-row.highlighted::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* CTA Button */
+  .cta-btn {
+    background: var(--coral);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 15px;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    font-family: var(--font);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-btn:active {
+    transform: scale(0.97);
+    background: var(--coral-dark);
+  }
+
+  .cta-btn.loading {
+    pointer-events: none;
+    color: transparent;
+  }
+
+  .cta-btn .spinner {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .cta-btn.loading .spinner { display: block; }
+
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* Plan Card */
+  .plan-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .plan-card:active { transform: scale(0.98); }
+
+  .plan-card.selected {
+    border: 2px solid var(--coral);
+    padding: 13px 15px;
+  }
+
+  /* no checkmark on selected plan */
+
+  .plan-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .plan-title {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-primary);
+  }
+
+  .plan-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .plan-price {
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--text-primary);
+    text-align: right;
+  }
+
+  .plan-price-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+
+  /* Info Box */
+  .info-box {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .info-box svg { flex-shrink: 0; margin-top: 1px; }
+
+  .info-box.coral-bg {
+    background: var(--coral-light);
+    color: #712B13;
+  }
+
+  /* Detail Row */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .detail-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .detail-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* Left border accent */
+  .accent-box {
+    border-left: 3px solid var(--coral);
+    padding-left: 12px;
+    margin-bottom: 16px;
+  }
+
+  .accent-box p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .accent-box strong {
+    color: var(--text-primary);
+  }
+
+  /* Flex Banner */
+  .flex-banner {
+    background: var(--coral);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .flex-banner:active { transform: scale(0.98); }
+
+  .flex-banner-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #fff;
+  }
+
+  .flex-banner-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.5;
+  }
+
+  /* Success Circle */
+  .success-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+  }
+
+  /* Progress bar */
+  .progress-bar-track {
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--coral);
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  /* Payment row */
+  .payment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+
+  .payment-row:last-child { border-bottom: none; }
+
+  .payment-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .payment-date {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 1px;
+  }
+
+  .payment-amount {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* Alert / Toast */
+  .toast-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 0;
+  }
+
+  .toast-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .alert-box {
+    background: var(--bg);
+    border-radius: 14px;
+    width: 270px;
+    overflow: hidden;
+    transform: scale(0.85);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .toast-overlay.show .alert-box {
+    transform: scale(1);
+  }
+
+  .alert-content {
+    padding: 20px 16px 16px;
+    text-align: center;
+  }
+
+  .alert-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .alert-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .alert-actions {
+    border-top: 0.5px solid var(--border);
+    display: flex;
+  }
+
+  .alert-btn {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 17px;
+    font-family: var(--font);
+    color: #007AFF;
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: background 0.15s;
+  }
+
+  .alert-btn:active { background: rgba(0,0,0,0.05); }
+
+  .alert-btn.bold { font-weight: 600; }
+
+  .alert-btn + .alert-btn {
+    border-left: 0.5px solid var(--border);
+  }
+
+  /* Step Progress Pills */
+  .step-pills {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    padding: 8px 20px 12px;
+  }
+
+  .step-pill {
+    height: 3px;
+    border-radius: 2px;
+    flex: 1;
+    background: var(--border);
+    transition: all 0.4s;
+    cursor: pointer;
+  }
+
+  .step-pill.active { background: var(--coral); }
+  .step-pill.done { background: var(--coral); opacity: 0.4; }
+
+  /* Confetti */
+  .confetti-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 90;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    top: -10px;
+    animation: confettiFall 2s ease-out forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(700px) rotate(720deg) scale(0.3); opacity: 0; }
+  }
+
+  /* Haptic pulse animation */
+  @keyframes hapticPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  .haptic { animation: hapticPulse 0.15s ease; }
+
+  /* Responsive: on real phones, remove frame */
+</style>
+</head>
+<body>
+
+<div class="iphone-frame">
+  <div class="iphone-screen">
+    <div class="dynamic-island"></div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="status-bar-right">
+        <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1D1D1F"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="#1D1D1F"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1D1D1F"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1D1D1F"/></svg>
+        <svg width="15" height="12" viewBox="0 0 15 12"><path d="M7.5 3.4C9.7 3.4 11.7 4.2 13.2 5.5L14.5 4C12.6 2.4 10.2 1.4 7.5 1.4C4.8 1.4 2.4 2.4 0.5 4L1.8 5.5C3.3 4.2 5.3 3.4 7.5 3.4Z" fill="#1D1D1F"/><path d="M7.5 6.8C9 6.8 10.3 7.3 11.3 8.2L12.6 6.7C11.2 5.5 9.4 4.8 7.5 4.8C5.6 4.8 3.8 5.5 2.4 6.7L3.7 8.2C4.7 7.3 6 6.8 7.5 6.8Z" fill="#1D1D1F"/><circle cx="7.5" cy="10.5" r="1.5" fill="#1D1D1F"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="2.5" stroke="#1D1D1F" stroke-width="1" fill="none"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#1D1D1F"/><rect x="1.5" y="2.5" width="16" height="7" rx="1.5" fill="#1D9E75"/></svg>
+      </div>
+    </div>
+
+    <!-- Step Progress -->
+    <div class="step-pills" id="stepPills"></div>
+
+    <!-- Screen Area -->
+    <div class="screen-area" id="screenArea"></div>
+
+    <!-- Home Indicator -->
+    <div class="home-indicator">
+      <div class="home-indicator-bar"></div>
+    </div>
+
+    <!-- Toast Overlay (iOS Alert) -->
+    <div class="toast-overlay" id="alertOverlay">
+      <div class="alert-box">
+        <div class="alert-content">
+          <div class="alert-title" id="alertTitle"></div>
+          <div class="alert-message" id="alertMessage"></div>
+        </div>
+        <div class="alert-actions" id="alertActions"></div>
+      </div>
+    </div>
+
+    <!-- Confetti container -->
+    <div class="confetti-container" id="confettiContainer"></div>
+  </div>
+</div>
+
+<script>
+const coral = '#FF5733';
+const coralLight = '#FAECE7';
+const green = '#1D9E75';
+const greenLight = '#E1F5EE';
+const warn = '#BA7517';
+const red = '#E24B4A';
+
+let currentScreen = 0;
+let selectedPlan = 0; // 0=3mo, 1=6mo, 2=12mo
+let flowCompleted = false;
+const totalScreens = 6;
+
+const plans = [
+  { months: 3, rate: '30%', total: '$3,225', monthly: '$1,075', interest: '$225.00' },
+  { months: 6, rate: '30%', total: '$3,450', monthly: '$575', interest: '$450.00' },
+  { months: 12, rate: '30%', total: '$3,900', monthly: '$325', interest: '$900.00' }
+];
+
+// DOM
+const screenArea = document.getElementById('screenArea');
+const stepPills = document.getElementById('stepPills');
+const alertOverlay = document.getElementById('alertOverlay');
+const confettiContainer = document.getElementById('confettiContainer');
+
+// ─── Screens ───
+function getScreenHTML(index) {
+  const p = plans[selectedPlan];
+  switch(index) {
+    case 0: return screenHome();
+    case 1: return screenDetail();
+    case 2: return screenFlex();
+    case 3: return screenPlan();
+    case 4: return screenConfirm();
+    case 5: return screenSuccess();
+    default: return '';
+  }
+}
+
+function screenHome() {
+  const balance = flowCompleted ? '$21,424.50' : '$18,424.50';
+  return `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:2px;">Cuenta digital</div>
+      <div style="font-size:30px;font-weight:500;color:var(--text-primary);">${balance}</div>
+      <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">Saldo disponible</div>
+    </div>
+    <div class="quick-actions">
+      <div class="quick-action" onclick="showToastNotif('Transferencias próximamente')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Transferir
+      </div>
+      <div class="quick-action" onclick="showToastNotif('Tarjeta digital activa')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Tarjeta
+      </div>
+      <div class="quick-action" onclick="showToastNotif('Historial completo')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Historial
+      </div>
+    </div>
+    <div style="font-weight:500;font-size:14px;color:var(--text-primary);margin-bottom:14px;">Movimientos recientes</div>
+    <div>
+      <div class="tx-row" onclick="showToastNotif('Uber Eats · -$289.00')">
+        <div class="tx-row-left">
+          <div class="tx-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg></div>
+          <div><div class="tx-name">Uber Eats</div><div class="tx-date">Hoy, 16:05</div></div>
+        </div>
+        <span class="tx-amount negative">-$289.00</span>
+      </div>
+      ${!flowCompleted ? `
+      <div class="tx-row highlighted" onclick="goTo(1)">
+        <div class="tx-row-left">
+          <div class="tx-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${coral}" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z"/></svg></div>
+          <div><div class="tx-name">Apple Store</div><div class="tx-date">Hoy, 14:32</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="tx-amount negative">-$3,000.00</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${coral}" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+      ` : ''}
+      <div class="tx-row" onclick="showToastNotif('Amazon MX · -$659.00')">
+        <div class="tx-row-left">
+          <div class="tx-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg></div>
+          <div><div class="tx-name">Amazon MX</div><div class="tx-date">Ayer, 20:11</div></div>
+        </div>
+        <span class="tx-amount negative">-$659.00</span>
+      </div>
+      <div class="tx-row" onclick="showToastNotif('OXXO · -$127.50')">
+        <div class="tx-row-left">
+          <div class="tx-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <div><div class="tx-name">OXXO</div><div class="tx-date">Ayer, 08:45</div></div>
+        </div>
+        <span class="tx-amount negative">-$127.50</span>
+      </div>
+      <div class="tx-row" style="border-bottom:none;">
+        <div class="tx-row-left">
+          <div class="tx-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${green}" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <div><div class="tx-name">Nómina</div><div class="tx-date">15 mar</div></div>
+        </div>
+        <span class="tx-amount positive">+$22,500.00</span>
+      </div>
+    </div>
+  `;
+}
+
+function screenDetail() {
+  return `
+    <div class="nav-header" onclick="goTo(0)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+      <span class="nav-title">Detalle de compra</span>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div class="tx-icon" style="width:48px;height:48px;margin:0 auto 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z"/></svg>
+      </div>
+      <div style="font-size:28px;font-weight:500;color:var(--text-primary);margin-bottom:2px;">$3,000.00</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text-primary);">Apple Store</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">14 mar 2026 · 14:32 · Compras</div>
+    </div>
+    <div style="background:var(--bg-secondary);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;">
+      <div class="detail-row"><span class="detail-label">Cuenta</span><span class="detail-value">Cuenta digital</span></div>
+      <div class="detail-row"><span class="detail-label">Método</span><span class="detail-value">Tarjeta de débito</span></div>
+      <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Estado</span><span class="detail-value" style="color:${green};">Completada</span></div>
+    </div>
+    <button class="cta-btn" onclick="goTo(2)" style="margin-top:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="vertical-align:-2px;margin-right:6px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      Pagar con Vax
+      <div class="spinner"></div>
+    </button>
+  `;
+}
+
+function screenFlex() {
+  return `
+    <div class="nav-header" onclick="goTo(1)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+      <span class="nav-title">Apple Store</span>
+    </div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:32px;font-weight:500;color:var(--text-primary);margin-bottom:4px;">$3,000.00</div>
+      <div style="font-size:13px;color:var(--text-secondary);">14 mar 2026 · Compras</div>
+    </div>
+    <div class="flex-banner" onclick="goTo(3)">
+      <div class="flex-banner-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Pagar con Vax
+      </div>
+      <div class="flex-banner-text">Divide esta compra en pagos a plazos. Te reembolsamos en tu cuenta digital y el monto se registra en tu tarjeta de crédito.</div>
+    </div>
+    <div class="info-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${warn}" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span>Elegible hasta el <strong style="color:var(--text-primary);">28 mar</strong> (14 días)</span>
+    </div>
+    <button class="cta-btn" onclick="goTo(3)" style="margin-top:20px;">
+      Continuar
+      <div class="spinner"></div>
+    </button>
+  `;
+}
+
+function screenPlan() {
+  return `
+    <div class="nav-header" onclick="goTo(2)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+      <span class="nav-title">Elige tu plan</span>
+    </div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:13px;color:var(--text-secondary);">Apple Store</div>
+      <div style="font-size:24px;font-weight:500;color:var(--text-primary);">$3,000.00</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <div class="plan-card ${selectedPlan===0?'selected':''}" onclick="selectPlan(0)">
+        <div class="plan-row">
+          <div><div class="plan-title">3 meses</div><div class="plan-subtitle">30% anual · Total: $3,225</div></div>
+          <div><div class="plan-price">$1,075</div><div class="plan-price-label">/mes</div></div>
+        </div>
+      </div>
+      <div class="plan-card ${selectedPlan===1?'selected':''}" onclick="selectPlan(1)">
+        <div class="plan-row">
+          <div><div class="plan-title">6 meses</div><div class="plan-subtitle">30% anual · Total: $3,450</div></div>
+          <div><div class="plan-price">$575</div><div class="plan-price-label">/mes</div></div>
+        </div>
+      </div>
+      <div class="plan-card ${selectedPlan===2?'selected':''}" onclick="selectPlan(2)">
+        <div class="plan-row">
+          <div><div class="plan-title">12 meses</div><div class="plan-subtitle">30% anual · Total: $3,900</div></div>
+          <div><div class="plan-price">$325</div><div class="plan-price-label">/mes</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-bottom:20px;">
+      Tasa fija del 30% anual. Las cuotas y el costo total dependen del plazo elegido.
+    </div>
+    <button class="cta-btn" onclick="goTo(4)">
+      Continuar con ${plans[selectedPlan].months} meses
+      <div class="spinner"></div>
+    </button>
+  `;
+}
+
+function screenConfirm() {
+  const p = plans[selectedPlan];
+  return `
+    <div class="nav-header" onclick="goTo(3)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+      <span class="nav-title">Confirmar</span>
+    </div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="success-circle" style="background:${coralLight};">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${coral}" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div style="font-weight:500;font-size:18px;color:var(--text-primary);margin-bottom:4px;">Mover a Vax</div>
+      <div style="font-size:13px;color:var(--text-secondary);">Apple Store · $3,000.00</div>
+    </div>
+    <div style="background:var(--bg-secondary);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;">
+      <div class="detail-row"><span class="detail-label">Plan</span><span class="detail-value">${p.months} meses</span></div>
+      <div class="detail-row"><span class="detail-label">Cuota mensual</span><span class="detail-value">${p.monthly}</span></div>
+      <div class="detail-row"><span class="detail-label">Tasa anual</span><span class="detail-value">${p.rate}</span></div>
+      <div class="detail-row"><span class="detail-label">Intereses</span><span class="detail-value" style="color:${red};">${p.interest}</span></div>
+      <div class="detail-row"><span class="detail-label">Se registra en</span><span class="detail-value">Tarjeta de crédito</span></div>
+      <div style="border-top:0.5px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;margin-top:6px;">
+        <span class="detail-label">Costo total</span><span style="font-size:15px;font-weight:500;color:var(--text-primary);">${p.total}</span>
+      </div>
+    </div>
+    <div class="info-box" style="margin-bottom:20px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${warn}" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>Se reembolsarán $3,000.00 a tu cuenta digital. El monto se financiará a plazos con intereses y quedará registrado en tu tarjeta de crédito. Primer pago: 14 abr.</span>
+    </div>
+    <button class="cta-btn" id="confirmBtn" onclick="handleConfirm()">
+      Confirmar Vax
+      <div class="spinner"></div>
+    </button>
+  `;
+}
+
+function screenSuccess() {
+  const p = plans[selectedPlan];
+  const payments = [];
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  for (let i = 0; i < p.months; i++) {
+    const m = (3 + i) % 12; // starting April (index 3)
+    const y = 2026 + Math.floor((3 + i) / 12);
+    payments.push({ label: `Pago ${i+1}`, date: `14 ${months[m]} ${y}`, amount: p.monthly });
+  }
+  // Only show first 3 payments max to keep it clean
+  const visiblePayments = payments.slice(0, 3);
+  const moreCount = payments.length - 3;
+
+  return `
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="success-circle" style="background:${greenLight};">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${green}" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div style="font-weight:500;font-size:18px;color:var(--text-primary);margin-bottom:4px;">Listo</div>
+      <div style="font-size:13px;color:var(--text-secondary);">Tu compra ahora está en Vax</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <div style="flex:1;background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px;">Reembolso</div>
+        <div style="font-weight:500;font-size:16px;color:${green};">+$3,000</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">a cuenta digital</div>
+      </div>
+      <div style="flex:1;background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px;">Nuevo saldo</div>
+        <div style="font-weight:500;font-size:16px;color:var(--text-primary);">$21,424.50</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">restaurado</div>
+      </div>
+    </div>
+    <div class="info-box coral-bg" style="margin-bottom:16px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#712B13" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      <span>El monto queda registrado como cargo diferido en tu tarjeta de crédito.</span>
+    </div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${coral}" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span style="font-weight:500;font-size:14px;color:var(--text-primary);">Plan Vax activo</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">${p.rate} anual · Intereses: ${p.interest}</div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
+          <span>Pagado</span><span>0 de ${p.months}</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressFill" style="width:0%;"></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+        ${visiblePayments.map(pay => `
+          <div class="payment-row">
+            <div><div class="payment-name">${pay.label}</div><div class="payment-date">${pay.date}</div></div>
+            <span class="payment-amount">${pay.amount}</span>
+          </div>
+        `).join('')}
+        ${moreCount > 0 ? `<div style="text-align:center;padding:8px 0;font-size:12px;color:var(--text-secondary);">+ ${moreCount} pagos más</div>` : ''}
+      </div>
+    </div>
+    <button class="cta-btn" onclick="resetFlow()" style="background:var(--bg-secondary);color:var(--text-primary);">
+      Volver al inicio
+    </button>
+  `;
+}
+
+// ─── Navigation ───
+function goTo(index, direction) {
+  if (index < 0 || index >= totalScreens) return;
+  const goingForward = direction !== undefined ? direction === 'forward' : index > currentScreen;
+  
+  // Animate out
+  const currentContent = screenArea.querySelector('.screen-content');
+  if (currentContent) {
+    currentContent.classList.remove('active');
+    if (goingForward) currentContent.classList.add('exit-left');
+    currentContent.style.transform = goingForward ? 'translateX(-40px)' : 'translateX(40px)';
+    currentContent.style.opacity = '0';
+  }
+
+  setTimeout(() => {
+    currentScreen = index;
+    renderScreen();
+    renderPills();
+  }, 200);
+}
+
+function renderScreen() {
+  screenArea.innerHTML = `<div class="screen-content">${getScreenHTML(currentScreen)}</div>`;
+  screenArea.scrollTop = 0;
+  
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const content = screenArea.querySelector('.screen-content');
+      if (content) content.classList.add('active');
+    });
+  });
+}
+
+function renderPills() {
+  stepPills.innerHTML = Array.from({length: totalScreens}, (_, i) => {
+    let cls = 'step-pill';
+    if (i === currentScreen) cls += ' active';
+    else if (i < currentScreen) cls += ' done';
+    return `<div class="${cls}" onclick="goTo(${i})"></div>`;
+  }).join('');
+}
+
+// ─── Plan Selection ───
+function selectPlan(index) {
+  selectedPlan = index;
+  renderScreen();
+  // Haptic feedback visual
+  const cards = document.querySelectorAll('.plan-card');
+  if (cards[index]) {
+    cards[index].classList.add('haptic');
+    setTimeout(() => cards[index].classList.remove('haptic'), 200);
+  }
+}
+
+// ─── Confirm with loading ───
+function handleConfirm() {
+  showAlert(
+    '¿Confirmar Vax?',
+    `Se moverá tu compra de Apple Store ($3,000.00) a Vax con un plan de ${plans[selectedPlan].months} meses.`,
+    [
+      { label: 'Cancelar', bold: false, action: () => hideAlert() },
+      { label: 'Confirmar', bold: true, action: () => {
+        hideAlert();
+        const btn = document.getElementById('confirmBtn');
+        if (btn) {
+          btn.classList.add('loading');
+          setTimeout(() => {
+            goTo(5, 'forward');
+            setTimeout(() => {
+              showToastNotif('Reembolso de $3,000.00 acreditado');
+              launchConfetti();
+              startAutoReturn();
+            }, 500);
+          }, 1500);
+        }
+      }}
+    ]
+  );
+}
+
+// ─── iOS Alert ───
+function showAlert(title, message, actions) {
+  document.getElementById('alertTitle').textContent = title;
+  document.getElementById('alertMessage').textContent = message;
+  const actionsDiv = document.getElementById('alertActions');
+  actionsDiv.innerHTML = actions.map(a => 
+    `<button class="alert-btn ${a.bold ? 'bold' : ''}">${a.label}</button>`
+  ).join('');
+  actionsDiv.querySelectorAll('.alert-btn').forEach((btn, i) => {
+    btn.onclick = actions[i].action;
+  });
+  alertOverlay.classList.add('show');
+}
+
+function hideAlert() {
+  alertOverlay.classList.remove('show');
+}
+
+// ─── Toast disabled ───
+function showToastNotif(text) { /* removed */ }
+
+// ─── Confetti ───
+function launchConfetti() {
+  const colors = [coral, green, '#FFD700', '#007AFF', coralLight];
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    piece.style.animationDuration = (1.5 + Math.random()) + 's';
+    piece.style.width = (5 + Math.random() * 6) + 'px';
+    piece.style.height = (5 + Math.random() * 6) + 'px';
+    confettiContainer.appendChild(piece);
+  }
+  setTimeout(() => { confettiContainer.innerHTML = ''; }, 3000);
+}
+
+// ─── Reset ───
+function resetFlow() {
+  selectedPlan = 0;
+  flowCompleted = true;
+  currentScreen = 0;
+  renderScreen();
+  renderPills();
+}
+
+let autoReturnTimer = null;
+
+function startAutoReturn() {
+  clearTimeout(autoReturnTimer);
+  autoReturnTimer = setTimeout(() => {
+    if (currentScreen === 5) resetFlow();
+  }, 8000);
+}
+
+// ─── Swipe gestures ───
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+    if (dx < 0 && currentScreen < totalScreens - 1) goTo(currentScreen + 1, 'forward');
+    else if (dx > 0 && currentScreen > 0) goTo(currentScreen - 1, 'back');
+  }
+}, { passive: true });
+
+// ─── Keyboard nav for desktop ───
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' && currentScreen < totalScreens - 1) goTo(currentScreen + 1, 'forward');
+  if (e.key === 'ArrowLeft' && currentScreen > 0) goTo(currentScreen - 1, 'back');
+});
+
+// ─── Init ───
+renderScreen();
+renderPills();
+
+// ─── Register Service Worker ───
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+
+</body>
+</html>
