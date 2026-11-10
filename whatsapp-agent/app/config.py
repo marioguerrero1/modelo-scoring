@@ -96,6 +96,7 @@ class Settings:
     whatsapp_app_secret: str
     google_calendar_id: str
     google_service_account_file: str = "service-account.json"
+    google_service_account_json: str = ""
     whatsapp_graph_version: str = "v23.0"
     claude_model: str = "claude-opus-5-5"
     claude_effort: str = "medium"
@@ -136,6 +137,7 @@ def cargar_settings() -> Settings:
         whatsapp_app_secret=requeridas["WHATSAPP_APP_SECRET"],
         google_calendar_id=requeridas["GOOGLE_CALENDAR_ID"],
         google_service_account_file=env("GOOGLE_SERVICE_ACCOUNT_FILE", "service-account.json"),
+        google_service_account_json=env("GOOGLE_SERVICE_ACCOUNT_JSON", ""),
         whatsapp_graph_version=env("WHATSAPP_GRAPH_VERSION", "v23.0"),
         claude_model=env("CLAUDE_MODEL", "claude-opus-5-5"),
         claude_effort=env("CLAUDE_EFFORT", "medium"),

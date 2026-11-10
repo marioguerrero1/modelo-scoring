@@ -43,6 +43,9 @@ Crea una API key en <https://platform.claude.com> y ponla en `ANTHROPIC_API_KEY`
    **"Hacer cambios en eventos"**.
 4. Pon en `GOOGLE_CALENDAR_ID` el ID del calendario (para el calendario principal es tu correo de Gmail).
 
+Si tu hosting no permite subir archivos, en lugar del archivo define la variable
+`GOOGLE_SERVICE_ACCOUNT_JSON` con el contenido de la clave (el JSON completo o en base64).
+
 Todo lo que ya tengas en ese calendario cuenta como ocupado, así que el agente no encima citas con
 tus otros compromisos.
 

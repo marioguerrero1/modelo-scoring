@@ -29,12 +29,35 @@ class Calendario(Protocol):
     def cancelar_cita(self, id_cita: str, telefono: str) -> bool: ...
 
 
+def leer_credenciales(valor: str) -> dict:
+    """Interpreta la clave de la cuenta de servicio pegada en una variable de entorno."""
+    import base64
+    import json
+
+    valor = valor.strip()
+    try:
+        if not valor.startswith("{"):
+            valor = base64.b64decode(valor, validate=True).decode("utf-8")
+        datos = json.loads(valor)
+    except ValueError:
+        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON no es un JSON válido ni un JSON en base64") from None
+    if not isinstance(datos, dict) or datos.get("type") != "service_account":
+        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON no es la clave de una cuenta de servicio")
+    return datos
+
+
 class GoogleCalendar:
-    def __init__(self, archivo_credenciales: str, calendar_id: str, zona_horaria: str):
+    def __init__(self, archivo_credenciales: str, calendar_id: str, zona_horaria: str, credenciales_json: str = ""):
+        """`credenciales_json` (contenido de la clave, en JSON o en base64) tiene prioridad sobre el archivo."""
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
 
-        creds = service_account.Credentials.from_service_account_file(archivo_credenciales, scopes=SCOPES)
+        if credenciales_json:
+            creds = service_account.Credentials.from_service_account_info(
+                leer_credenciales(credenciales_json), scopes=SCOPES
+            )
+        else:
+            creds = service_account.Credentials.from_service_account_file(archivo_credenciales, scopes=SCOPES)
         self._svc = build("calendar", "v3", credentials=creds, cache_discovery=False)
         self._cal = calendar_id
         self._tz = zona_horaria

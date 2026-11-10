@@ -40,7 +40,9 @@ def crear_estado() -> Estado:
     negocio = cargar_negocio(s.business_config)
     store = Store(s.database_path)
     wa = WhatsApp(s.whatsapp_token, s.whatsapp_phone_number_id, s.whatsapp_graph_version)
-    calendario = GoogleCalendar(s.google_service_account_file, s.google_calendar_id, negocio.zona_horaria)
+    calendario = GoogleCalendar(
+        s.google_service_account_file, s.google_calendar_id, negocio.zona_horaria, s.google_service_account_json
+    )
 
     notificar = None
     if s.owner_whatsapp:
