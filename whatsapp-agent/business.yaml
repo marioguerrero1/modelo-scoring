@@ -1,0 +1,40 @@
+# Datos de tu negocio. Edita este archivo: el agente solo sabe lo que está aquí.
+nombre: "Mi Negocio"
+descripcion: "Describe aquí en una o dos frases a qué se dedica tu negocio."
+zona_horaria: "America/Mexico_City"
+direccion: "Calle Ejemplo 123, Ciudad"
+telefono_contacto: "+52 55 0000 0000"
+
+# Horario de atención para citas (formato 24 h). Deja la lista vacía para un día cerrado.
+horario:
+  lunes:     [["09:00", "14:00"], ["16:00", "19:00"]]
+  martes:    [["09:00", "14:00"], ["16:00", "19:00"]]
+  miercoles: [["09:00", "14:00"], ["16:00", "19:00"]]
+  jueves:    [["09:00", "14:00"], ["16:00", "19:00"]]
+  viernes:   [["09:00", "14:00"], ["16:00", "19:00"]]
+  sabado:    [["10:00", "14:00"]]
+  domingo:   []
+
+# Servicios que se pueden agendar.
+servicios:
+  - nombre: "Consulta"
+    duracion_min: 30
+    precio: "$500 MXN"
+    descripcion: "Consulta general."
+  - nombre: "Asesoría"
+    duracion_min: 60
+    precio: "$900 MXN"
+    descripcion: "Sesión de asesoría de una hora."
+
+citas:
+  intervalo_min: 30            # cada cuántos minutos se ofrece un horario
+  anticipacion_min_horas: 2    # no agendar con menos de X horas de anticipación
+  max_dias_adelante: 30        # hasta cuántos días a futuro se puede agendar
+
+# Preguntas frecuentes y políticas (texto libre).
+info_adicional: |
+  - Formas de pago: efectivo, tarjeta y transferencia.
+  - Cancelaciones: avisar con al menos 24 horas de anticipación.
+
+# Tono del agente.
+estilo: "Amable, cercano y breve. Habla de tú."
